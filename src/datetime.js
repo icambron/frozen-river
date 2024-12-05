@@ -54,10 +54,10 @@ import Invalid from "./impl/invalid.js";
 const INVALID = "Invalid DateTime";
 const MAX_DATE = 8.64e15;
 const Precision = {
-  hours: 1,
-  minutes: 2,
-  seconds: 3,
-  milliseconds: 4,
+  hour: 1,
+  minute: 2,
+  second: 3,
+  millisecond: 4,
 };
 
 function unsupportedZone(zone) {
@@ -251,21 +251,15 @@ function toISOTime(
   if (desiredPrecision === undefined) throw new InvalidUnitError(precision);
 
   let c = padStart(o.c.hour);
-  if (desiredPrecision >= Precision.minutes) {
+  if (desiredPrecision >= Precision.minute) {
     if (extended) c += ":";
     c += padStart(o.c.minute);
 
-    if (
-      desiredPrecision >= Precision.seconds &&
-      !(suppressSeconds && o.c.millisecond === 0 && o.c.second === 0)
-    ) {
+    if (desiredPrecision >= Precision.second && !(suppressSeconds && o.c.millisecond === 0 && o.c.second === 0)) {
       if (extended) c += ":";
       c += padStart(o.c.second);
 
-      if (
-        desiredPrecision >= Precision.milliseconds &&
-        !(suppressMilliseconds && o.c.millisecond === 0)
-      ) {
+      if (desiredPrecision >= Precision.millisecond && !(suppressMilliseconds && o.c.millisecond === 0)) {
         c += "." + padStart(o.c.millisecond, 3);
       }
     }
