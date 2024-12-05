@@ -254,12 +254,12 @@ function toISOTime(
   if (desiredPrecision >= Precision.minute) {
     if (extended) c += ":";
     c += padStart(o.c.minute);
-
-    if (desiredPrecision >= Precision.second && !(suppressSeconds && o.c.millisecond === 0 && o.c.second === 0)) {
+    const hideSeconds = suppressSeconds && o.c.millisecond === 0 && o.c.second === 0;
+    if (desiredPrecision >= Precision.second && !hideSeconds) {
       if (extended) c += ":";
       c += padStart(o.c.second);
-
-      if (desiredPrecision >= Precision.millisecond && !(suppressMilliseconds && o.c.millisecond === 0)) {
+      const hideMilliseconds = suppressMilliseconds && o.c.millisecond === 0;
+      if (desiredPrecision >= Precision.millisecond && !hideMilliseconds) {
         c += "." + padStart(o.c.millisecond, 3);
       }
     }
