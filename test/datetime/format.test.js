@@ -1,6 +1,7 @@
 /* global test expect */
 
 import { DateTime, Zone, FixedOffsetZone } from "../../src/luxon";
+import { InvalidUnitError } from "../../src/errors";
 
 const dtMaker = () =>
     DateTime.fromObject(
@@ -259,6 +260,35 @@ test("DateTime#toISOTime can include the prefix", () => {
 
 test("DateTime#toISOTime() returns null for invalid DateTimes", () => {
   expect(invalid.toISOTime()).toBe(null);
+});
+
+test("DateTime#toISOTime({precision}) truncates time to desired precision", () => {
+  expect(dt.toISOTime({ precision: "millisecond" })).toBe("09:23:54.123Z");
+  expect(dt.toISOTime({ precision: "second" })).toBe("09:23:54Z");
+  expect(dt.toISOTime({ precision: "minute" })).toBe("09:23Z");
+  expect(dt.toISOTime({ precision: "hours" })).toBe("09Z");
+});
+
+test("DateTime#toISOTime({precision}) throws when the precision is invalid", () => {
+  expect(() => dt.toISOTime({ precision: "ms" })).toThrow(InvalidUnitError);
+  expect(() => dt.toISOTime({ precision: "xxx" })).toThrow(InvalidUnitError);
+  expect(() => dt.toISOTime({ precision: null })).toThrow(InvalidUnitError);
+  expect(() => dt.toISOTime({ precision: "days" })).toThrow(InvalidUnitError);
+  expect(() => dt.toISOTime({ precision: "months" })).toThrow(InvalidUnitError);
+  expect(() => dt.toISOTime({ precision: "years" })).toThrow(InvalidUnitError);
+});
+
+test("DateTime#toISOTime({precision, suppressSeconds}) precision takes precedence", () => {
+  const dt2 = dt.set({ second: 0, millisecond: 0 });
+  expect(dt2.toISOTime({ precision: "minute", suppressSeconds: true })).toBe("09:23Z");
+  expect(dt2.toISOTime({ precision: "second", suppressSeconds: true })).toBe("09:23Z");
+  expect(dt2.toISOTime({ precision: "millisecond", suppressSeconds: true })).toBe("09:23Z");
+});
+
+test("DateTime#toISOTime({precision, suppressMilliseconds}) supress", () => {
+  expect(
+    dt.set({ millisecond: 0 }).toISOTime({ precision: "millisecond", suppressMilliseconds: true })
+  ).toBe("09:23:54Z");
 });
 
 //------

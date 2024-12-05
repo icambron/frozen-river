@@ -53,6 +53,12 @@ import Invalid from "./impl/invalid.js";
 
 const INVALID = "Invalid DateTime";
 const MAX_DATE = 8.64e15;
+const Precision = {
+  hours: 1,
+  minutes: 2,
+  seconds: 3,
+  milliseconds: 4,
+};
 
 function unsupportedZone(zone) {
   return new Invalid("unsupported zone", `the zone "${zone.name}" is not supported`);
@@ -238,25 +244,30 @@ function toISOTime(
   suppressSeconds,
   suppressMilliseconds,
   includeOffset,
-  extendedZone
+  extendedZone,
+  precision
 ) {
+  let desiredPrecision = Precision[normalizeUnit(precision)];
+  if (desiredPrecision === undefined) throw new InvalidUnitError(precision);
+
   let c = padStart(o.c.hour);
-  if (extended) {
-    c += ":";
+  if (desiredPrecision >= Precision.minutes) {
+    if (extended) c += ":";
     c += padStart(o.c.minute);
-    if (o.c.millisecond !== 0 || o.c.second !== 0 || !suppressSeconds) {
-      c += ":";
-    }
-  } else {
-    c += padStart(o.c.minute);
-  }
 
-  if (o.c.millisecond !== 0 || o.c.second !== 0 || !suppressSeconds) {
-    c += padStart(o.c.second);
+    if (
+      desiredPrecision >= Precision.seconds &&
+      !(suppressSeconds && o.c.millisecond === 0 && o.c.second === 0)
+    ) {
+      if (extended) c += ":";
+      c += padStart(o.c.second);
 
-    if (o.c.millisecond !== 0 || !suppressMilliseconds) {
-      c += ".";
-      c += padStart(o.c.millisecond, 3);
+      if (
+        desiredPrecision >= Precision.milliseconds &&
+        !(suppressMilliseconds && o.c.millisecond === 0)
+      ) {
+        c += "." + padStart(o.c.millisecond, 3);
+      }
     }
   }
 
@@ -1819,10 +1830,12 @@ export default class DateTime {
    * @param {boolean} [opts.includeOffset=true] - include the offset, such as 'Z' or '-04:00'
    * @param {boolean} [opts.extendedZone=false] - add the time zone format extension
    * @param {string} [opts.format='extended'] - choose between the basic and extended format
+   * @param {string} [opts.precision='milliseconds'] - specify desired time precision: 'hours', 'minutes', 'seconds' or 'milliseconds'
    * @example DateTime.utc(1983, 5, 25).toISO() //=> '1982-05-25T00:00:00.000Z'
    * @example DateTime.now().toISO() //=> '2017-04-22T20:47:05.335-04:00'
    * @example DateTime.now().toISO({ includeOffset: false }) //=> '2017-04-22T20:47:05.335'
    * @example DateTime.now().toISO({ format: 'basic' }) //=> '20170422T204705.335-0400'
+   * @example DateTime.now().toISO({ precision: 'minute' }) //=> '2017-04-22T20:47Z'
    * @return {string|null}
    */
   toISO({
@@ -1831,6 +1844,7 @@ export default class DateTime {
     suppressMilliseconds = false,
     includeOffset = true,
     extendedZone = false,
+    precision = "milliseconds",
   } = {}) {
     if (!this.isValid) {
       return null;
@@ -1840,7 +1854,15 @@ export default class DateTime {
 
     let c = toISODate(this, ext);
     c += "T";
-    c += toISOTime(this, ext, suppressSeconds, suppressMilliseconds, includeOffset, extendedZone);
+    c += toISOTime(
+      this,
+      ext,
+      suppressSeconds,
+      suppressMilliseconds,
+      includeOffset,
+      extendedZone,
+      precision
+    );
     return c;
   }
 
@@ -1878,10 +1900,12 @@ export default class DateTime {
    * @param {boolean} [opts.extendedZone=true] - add the time zone format extension
    * @param {boolean} [opts.includePrefix=false] - include the `T` prefix
    * @param {string} [opts.format='extended'] - choose between the basic and extended format
+   * @param {string} [opts.precision='milliseconds'] - specify desired time precision: 'hours', 'minutes', 'seconds' or 'milliseconds'
    * @example DateTime.utc().set({ hour: 7, minute: 34 }).toISOTime() //=> '07:34:19.361Z'
    * @example DateTime.utc().set({ hour: 7, minute: 34, seconds: 0, milliseconds: 0 }).toISOTime({ suppressSeconds: true }) //=> '07:34Z'
    * @example DateTime.utc().set({ hour: 7, minute: 34 }).toISOTime({ format: 'basic' }) //=> '073419.361Z'
    * @example DateTime.utc().set({ hour: 7, minute: 34 }).toISOTime({ includePrefix: true }) //=> 'T07:34:19.361Z'
+   * @example DateTime.utc().set({ hour: 7, minute: 34, second: 56 }).toISOTime({ precision: 'minute' }) //=> '07:34Z'
    * @return {string}
    */
   toISOTime({
@@ -1891,6 +1915,7 @@ export default class DateTime {
     includePrefix = false,
     extendedZone = false,
     format = "extended",
+    precision = "milliseconds",
   } = {}) {
     if (!this.isValid) {
       return null;
@@ -1905,7 +1930,8 @@ export default class DateTime {
         suppressSeconds,
         suppressMilliseconds,
         includeOffset,
-        extendedZone
+        extendedZone,
+        precision
       )
     );
   }
