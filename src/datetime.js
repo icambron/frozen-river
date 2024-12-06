@@ -250,19 +250,18 @@ function toISOTime(
   let desiredPrecision = Precision[normalizeUnit(precision)];
   if (desiredPrecision === undefined) throw new InvalidUnitError(precision);
 
-  let c = padStart(o.c.hour);
-  if (desiredPrecision >= Precision.minute) {
-    if (extended) c += ":";
-    c += padStart(o.c.minute);
-    const hideSeconds = suppressSeconds && o.c.millisecond === 0 && o.c.second === 0;
-    if (desiredPrecision >= Precision.second && !hideSeconds) {
-      if (extended) c += ":";
-      c += padStart(o.c.second);
-      const hideMilliseconds = suppressMilliseconds && o.c.millisecond === 0;
-      if (desiredPrecision >= Precision.millisecond && !hideMilliseconds) {
-        c += "." + padStart(o.c.millisecond, 3);
-      }
-    }
+  switch (true) {
+    case (desiredPrecision >= Precision.hour):
+      c += padStart(o.c.hour);
+    case (desiredPrecision >= Precision.minute):
+      const extendedGlyph = (extended) ? ":" : "";
+      c += extendedGlyph + padStart(o.c.minute);
+    case (desiredPrecision >= Precision.second):
+      if (suppressSeconds && o.c.millisecond === 0 && o.c.second === 0) break;
+      c += extendedGlyph + padStart(o.c.second);
+    case (desiredPrecision >= Precision.millisecond):
+      if (suppressMilliseconds && o.c.millisecond === 0) break;
+      c += "." + padStart(o.c.millisecond, 3);
   }
 
   if (includeOffset) {
