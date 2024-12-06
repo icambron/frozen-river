@@ -247,21 +247,22 @@ function toISOTime(
   extendedZone,
   precision
 ) {
-  let desiredPrecision = Precision[normalizeUnit(precision)];
+  const desiredPrecision = Precision[normalizeUnit(precision)];
   if (desiredPrecision === undefined) throw new InvalidUnitError(precision);
+  const extendedGlyph = extended ? ":" : "";
+  const showSeconds = !suppressSeconds || o.c.millisecond !== 0 || o.c.second !== 0;
+  const showMilliseconds = showSeconds && (!suppressMilliseconds || o.c.millisecond !== 0);
 
-  switch (true) {
-    case desiredPrecision >= Precision.hour:
-      c += padStart(o.c.hour);
-    case desiredPrecision >= Precision.minute:
-      const extendedGlyph = extended ? ":" : "";
-      c += extendedGlyph + padStart(o.c.minute);
-    case desiredPrecision >= Precision.second:
-      if (suppressSeconds && o.c.millisecond === 0 && o.c.second === 0) break;
-      c += extendedGlyph + padStart(o.c.second);
-    case desiredPrecision >= Precision.millisecond:
-      if (suppressMilliseconds && o.c.millisecond === 0) break;
-      c += "." + padStart(o.c.millisecond, 3);
+  let c = new String();
+  switch (desiredPrecision) {
+    case Precision.millisecond:
+      c = showMilliseconds ? "." + padStart(o.c.millisecond, 3) : c;
+    case Precision.second:
+      c = showSeconds ? extendedGlyph + padStart(o.c.second) + c : c;
+    case Precision.minute:
+      c = extendedGlyph + padStart(o.c.minute) + c;
+    case Precision.hour:
+      c = padStart(o.c.hour) + c;
   }
 
   if (includeOffset) {
