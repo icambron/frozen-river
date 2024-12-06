@@ -251,15 +251,15 @@ function toISOTime(
   if (desiredPrecision === undefined) throw new InvalidUnitError(precision);
 
   switch (true) {
-    case (desiredPrecision >= Precision.hour):
+    case desiredPrecision >= Precision.hour:
       c += padStart(o.c.hour);
-    case (desiredPrecision >= Precision.minute):
-      const extendedGlyph = (extended) ? ":" : "";
+    case desiredPrecision >= Precision.minute:
+      const extendedGlyph = extended ? ":" : "";
       c += extendedGlyph + padStart(o.c.minute);
-    case (desiredPrecision >= Precision.second):
+    case desiredPrecision >= Precision.second:
       if (suppressSeconds && o.c.millisecond === 0 && o.c.second === 0) break;
       c += extendedGlyph + padStart(o.c.second);
-    case (desiredPrecision >= Precision.millisecond):
+    case desiredPrecision >= Precision.millisecond:
       if (suppressMilliseconds && o.c.millisecond === 0) break;
       c += "." + padStart(o.c.millisecond, 3);
   }
