@@ -278,17 +278,20 @@ test("DateTime#toISOTime({precision}) throws when the precision is invalid", () 
   expect(() => dt.toISOTime({ precision: "years" })).toThrow(InvalidUnitError);
 });
 
-test("DateTime#toISOTime({precision, suppressSeconds}) precision takes precedence", () => {
+test("DateTime#toISOTime({precision, suppressSeconds}) suppresses when precision is > 'hour'", () => {
   const dt2 = dt.set({ second: 0, millisecond: 0 });
+  expect(dt2.toISOTime({ precision: "hour", suppressSeconds: true })).toBe("09Z");
   expect(dt2.toISOTime({ precision: "minute", suppressSeconds: true })).toBe("09:23Z");
   expect(dt2.toISOTime({ precision: "second", suppressSeconds: true })).toBe("09:23Z");
   expect(dt2.toISOTime({ precision: "millisecond", suppressSeconds: true })).toBe("09:23Z");
 });
 
-test("DateTime#toISOTime({precision, suppressMilliseconds}) supress", () => {
-  expect(
-    dt.set({ millisecond: 0 }).toISOTime({ precision: "millisecond", suppressMilliseconds: true })
-  ).toBe("09:23:54Z");
+test("DateTime#toISOTime({precision, suppressMilliseconds}) suppresses when precision is > 'minute'", () => {
+  const dt2 = dt.set({ millisecond: 0 });
+  expect(dt2.toISOTime({ precision: "hour", suppressMilliseconds: true })).toBe("09Z");
+  expect(dt2.toISOTime({ precision: "minute", suppressMilliseconds: true })).toBe("09:23Z");
+  expect(dt2.toISOTime({ precision: "second", suppressMilliseconds: true })).toBe("09:23:54Z");
+  expect(dt2.toISOTime({ precision: "millisecond", suppressMilliseconds: true })).toBe("09:23:54Z");
 });
 
 //------
